@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NSE Stock Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+    <div class="container my-4">
+        <h1 class="text-center"> Stock Analysis</h1>
+
+        <!-- Live Nifty and Bank Nifty Prices -->
+        <div class="row my-4">
+            <div class="col-md-6">
+                <div class="card text-white bg-primary">
+                    <div class="card-body">
+                        <h5 class="card-title">Nifty 50</h5>
+                        <p class="card-text price" id="nifty-price">Loading...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">Bank Nifty</h5>
+                        <p class="card-text price" id="bank-nifty-price">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stock Analysis Form -->
+        <form method="POST" class="my-4">
+            <div class="row">
+                <div class="col-md-8">
+                    <input type="text" class="form-control" name="symbol" placeholder="Enter Stock Symbol (e.g., TCS)" required>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">Analyze</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Advanced TradingView Chart -->
+        {% if chart_symbol %}
+        <div class="my-4">
+            <h2>{{ chart_symbol }} Advanced Chart</h2>
+            <div id="tradingview_advanced"></div>
+        </div>
+        <script type="text/javascript">
+            new TradingView.widget({
+                "container_id": "tradingview_advanced",
+                "width": "100%",
+                "height": 600,
+                "symbol": "{{ chart_symbol }}",
+                "interval": "D",
+                "timezone": "Etc/UTC",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "toolbar_bg": "#f1f3f6",
+                "enable_publishing": false,
+                "hide_side_toolbar": false,
+                "allow_symbol_change": true,
+                "studies": ["MACD@tv-basicstudies", "RSI@tv-basicstudies"],
+                "details": true,
+                "news": ["headlines"],
+            });
+        </script>
+        {% endif %}
+
+        <!-- Analysis Chart -->
+        {% if chart_div %}
+        <div class="my-4">
+            <h2>Analysis Chart</h2>
+            <div>{{ chart_div|safe }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- JavaScript for Live Price Updates -->
+    <script>
+        function updatePrices() {
+            $.get("/get-live-prices", function(data) {
+                if (data.error) {
+                    alert("Error fetching live prices: " + data.error);
+                } else {
+                    $("#nifty-price").text("₹" + data["Nifty 50"]);
+                    $("#bank-nifty-price").text("₹" + data["Bank Nifty"]);
+                }
+            });
+        }
+
+        setInterval(updatePrices, 1000); // Refresh every second
+        updatePrices(); // Initial fetch
+    </script>
+</body>
+</html>
